@@ -101,7 +101,7 @@ app.post('/login', function(req, res) {
 
   req.session.regenerate(function() {
     req.session.user = username; 
-    res.redirect('/index');
+    res.redirect('/');
   });
 
   //user.getUserInfo(username, function (err, userInfo) {});
@@ -113,11 +113,17 @@ app.get('/signup', function(req, res) {
 });
 
 app.post('/signup', function(req, res) {
-  //addd to database
-  //check that its a unique entry
-  // req.session.regenerate(function() {
-  //   req.session.user = 0; 
-  // });
+  var username = req.body.username;
+  var password = req.body.password;
+  //hashing!
+  new User({username:username, password:password})
+    .save()
+    .then(function() {
+      req.session.regenerate(function() {
+        req.session.user = username; 
+        res.redirect('/');
+      });
+    });
 });
 
 /************************************************************/
