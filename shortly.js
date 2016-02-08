@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var session = require('express-session');
 
 
 var db = require('./app/config');
@@ -20,20 +21,31 @@ app.use(partials());
 app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({secret: 'secrets secrets are no fun'}));
 app.use(express.static(__dirname + '/public'));
 
 
-app.get('/', 
+var restrict = function(req, res, next) {
+  if (req.session.user) {
+    next();
+  } else {
+    req.session.error = 'Access Denied';
+    res.redirect('/login');
+  }
+};
+
+
+app.get('/', restrict, 
 function(req, res) {
   res.render('index');
 });
 
-app.get('/create', 
+app.get('/create', restrict,
 function(req, res) {
   res.render('index');
 });
 
-app.get('/links', 
+app.get('/links', restrict,
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
@@ -85,6 +97,8 @@ app.get('/login', function(req, res) {
 app.get('/signup', function(req, res) {
   res.render('signup');
 });
+
+
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
