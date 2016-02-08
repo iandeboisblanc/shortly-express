@@ -94,11 +94,31 @@ app.get('/login', function(req, res) {
   res.render('login');
 });
 
+app.post('/login', function(req, res) {
+  //
+  var username = req.body.username;
+  var password =req.body.password;
+
+  req.session.regenerate(function() {
+    req.session.user = username; 
+    res.redirect('/index');
+  });
+
+  //user.getUserInfo(username, function (err, userInfo) {});
+
+});
+
 app.get('/signup', function(req, res) {
   res.render('signup');
 });
 
-
+app.post('/signup', function(req, res) {
+  //addd to database
+  //check that its a unique entry
+  // req.session.regenerate(function() {
+  //   req.session.user = 0; 
+  // });
+});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
