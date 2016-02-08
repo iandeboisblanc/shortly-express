@@ -1,3 +1,5 @@
+// sqlite3 ./db/shortly.sqlite to open interactive prompt
+
 var path = require('path');
 var knex = require('knex')({
   client: 'sqlite3',
