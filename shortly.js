@@ -46,22 +46,6 @@ passport.use(new LocalStrategy(function(username, password, done) {
   .catch(function(err) {
     return done(null, false, {message: "invalid username"});
   });
-
-
-
-      // if (!user) {
-      //   return done(null, false, {message:'Incorrect User Name'});   
-      // } else if(user.isValidPassword(password)) {
-      //   console.log('returnval:', user.isValidPassword(password));
-      //   return done(null, user);
-      // } else {
-      //   console.log("Invalid Password");
-      //   return done(null, false, {message:'Incorrect Password'});        
-      // }
-    // })
-    // .catch(function(err) {
-    //   console.log("Error: " + error);
-    // });
 })
 );
 
@@ -81,8 +65,6 @@ passport.deserializeUser(function(id, done) {
 });
 
 
-
-
 var restrict = function(req, res, next) {
   if(req.user) {
     next();
@@ -90,16 +72,6 @@ var restrict = function(req, res, next) {
     res.redirect('/login');
   }
 };
-
-
-// var restrict = function(req, res, next) {
-//   if (req.session.user) {
-//     next();
-//   } else {
-//     req.session.error = 'Access Denied';
-//     res.redirect('/login');
-//   }
-// };
 
 
 app.get('/', restrict, 
@@ -164,25 +136,6 @@ app.get('/login', function(req, res) {
 app.post('/login', passport.authenticate('local', {successRedirect: '/',
                                           failureRedirect: '/login'}) );
 
-// app.post('/login', function(req, res) {
-//   var username = req.body.username;
-//   var password =req.body.password;
-  
-//   Users.query({where: {username: username}})
-//   .fetchOne()
-//   .then( function(user) {
-//     return user.isValidPassword(password);
-//   })
-//   .then( function(result) {
-//     req.session.regenerate(function() {
-//       req.session.user = username; 
-//       res.redirect('/');
-//     });
-//   }).catch( function(error) {
-//     console.log('Invalid Credentials: ' + error);
-//     res.redirect('/login');
-//   });
-// });
 
 app.get('/signup', function(req, res) {
   res.render('signup');
@@ -193,18 +146,18 @@ app.post('/signup', function(req, res) {
   var password = req.body.password;
   new User({username:username, password:password})
     .save()
-    .then(function() {
-      req.session.regenerate(function() {
-        req.session.user = username; 
-        res.redirect('/');
+    .then(function(user) {
+      req.login(user, function(err) {
+        if(!err) {
+          res.redirect('/');
+        }
       });
     });
 });
 
-
 app.get('/signout', 
 function(req, res) {
-  req.session.destroy();
+  req.logout();
   res.redirect('/login');
 });
 
