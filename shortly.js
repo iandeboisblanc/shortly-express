@@ -14,6 +14,7 @@ var Click = require('./app/models/click');
 
 var app = express();
 
+
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.use(partials());
@@ -98,7 +99,8 @@ app.post('/login', function(req, res) {
   var username = req.body.username;
   var password =req.body.password;
   console.log('Logging in with', username);
-  new User({username:username}).fetch()
+  Users.query({where: {username: username}})
+  .fetchOne()
   .then(function(user) {
     if(user) {
       console.log('fetching', user);
@@ -112,6 +114,7 @@ app.post('/login', function(req, res) {
     }    
   })
   .catch(function(err) {
+    console.log("Caught error");
     if(err) {
       throw err;
     }
