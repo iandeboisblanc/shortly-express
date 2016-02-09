@@ -122,29 +122,22 @@ app.post('/login', function(req, res) {
   
   Users.query({where: {username: username}})
   .fetchOne()
-  .then(function(user) {
-    if(user) {
-      bcrypt.compare(password, user.get('password'), function(err, result) {
-        if(result) {
-          req.session.regenerate(function() {
-            req.session.user = username; 
-            res.redirect('/');
-          });
-        } else {
-          console.log('Wrong password!');
-          res.redirect('/login');
-        }
+  .then( function(user) {
+    return user.isValidPassword(password);
+  })
+  .then( function(result) {
+    if(result) {
+      req.session.regenerate(function() {
+        req.session.user = username; 
+        res.redirect('/');
       });
     } else {
-      console.log('No user account!');
+      console.log('Wrong password!');
       res.redirect('/login');
-    }    
-  })
-  .catch(function(err) {
-    console.log("Caught error");
-    if(err) {
-      throw err;
     }
+  }).catch( function(error) {
+    console.log('invalid username: ' + error);
+    res.redirect('/login');
   });
 });
 

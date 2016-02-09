@@ -20,16 +20,9 @@ var User = db.Model.extend({
   },
 
   isValidPassword: function(password) {
-    bcrypt.compare(password, user.get('password'), function(err, result) {
-      if(result) {
-        req.session.regenerate(function() {
-          req.session.user = username; 
-          res.redirect('/');
-        });
-      } else {
-        console.log('Wrong password!');
-        res.redirect('/login');
-      }
+    return bcrypt.compareAsync(password, this.get('password'))
+    .catch(function(err) {
+      console.log('Error validating password');
     });
   }
 
