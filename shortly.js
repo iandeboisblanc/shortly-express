@@ -144,6 +144,14 @@ app.post('/signup', function(req, res) {
     });
 });
 
+
+app.get('/signout', 
+function(req, res) {
+  req.session.destroy();
+  res.redirect('/login');
+});
+
+
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
 // assume the route is a short code and try and handle it here.
