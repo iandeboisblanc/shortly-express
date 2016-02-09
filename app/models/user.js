@@ -21,8 +21,12 @@ var User = db.Model.extend({
 
   isValidPassword: function(password) {
     return bcrypt.compareAsync(password, this.get('password'))
-    .catch(function(err) {
-      console.log('Error validating password');
+    .then(function(result) {
+      if(result) {
+        return true;
+      } else {
+        throw new Error('Invalid password');
+      }
     });
   }
 

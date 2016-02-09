@@ -126,17 +126,12 @@ app.post('/login', function(req, res) {
     return user.isValidPassword(password);
   })
   .then( function(result) {
-    if(result) {
-      req.session.regenerate(function() {
-        req.session.user = username; 
-        res.redirect('/');
-      });
-    } else {
-      console.log('Wrong password!');
-      res.redirect('/login');
-    }
+    req.session.regenerate(function() {
+      req.session.user = username; 
+      res.redirect('/');
+    });
   }).catch( function(error) {
-    console.log('invalid username: ' + error);
+    console.log('Invalid Credentials: ' + error);
     res.redirect('/login');
   });
 });
