@@ -3,6 +3,8 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var bcrypt = require('bcrypt-nodejs');
+
 
 
 var db = require('./app/config');
@@ -130,14 +132,17 @@ app.post('/signup', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
   //hashing!
-  new User({username:username, password:password})
-    .save()
-    .then(function() {
-      req.session.regenerate(function() {
-        req.session.user = username; 
-        res.redirect('/');
+  bcrypt.hash(password, null, null, function(err, hash) {
+    console.log(err,hash);
+    new User({username:username, password:hash})
+      .save()
+      .then(function() {
+        req.session.regenerate(function() {
+          req.session.user = username; 
+          res.redirect('/');
+        });
       });
-    });
+  });
 });
 
 /************************************************************/
