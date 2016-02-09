@@ -98,32 +98,11 @@ app.get('/login', function(req, res) {
 app.post('/login', function(req, res) {
   var username = req.body.username;
   var password =req.body.password;
-  console.log('Logging in with', username);
-
-  // new User({username: username, password: password})
-  //   .fetch()
-  //   .then(function(user) {
-  //     if(user) {
-  //       console.log("Found user " + user.attributes);
-
-  //       req.session.regenerate(function() {
-  //           req.session.user = username; 
-  //           res.redirect('/');
-  //         });
-  //     }
-  //     else {
-  //       console.log('Invalid credentials');
-  //       res.redirect('/login');
-  //     }
-  //   });
-
-
-
+  
   Users.query({where: {username: username}})
   .fetchOne()
   .then(function(user) {
     if(user) {
-      console.log('fetching', user);
       bcrypt.compare(password, user.get('password'), function(err, result) {
         if(result) {
           req.session.regenerate(function() {
