@@ -44,7 +44,7 @@ passport.use(new LocalStrategy(function(username, password, done) {
             });
   })
   .catch(function(err) {
-    return done(err);
+    return done(null, false, {message: "invalid username"});
   });
 
 
