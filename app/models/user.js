@@ -1,7 +1,7 @@
 var db = require('../config');
 var bcrypt = require('bcrypt-nodejs');
 var Promise = require('bluebird');
-
+Promise.promisifyAll(bcrypt);
 
 
 var User = db.Model.extend({
@@ -10,13 +10,29 @@ var User = db.Model.extend({
   constructor: function() {
     db.Model.apply(this, arguments);
     var password = this.get('password');
-    bcrypt.hash(password, null, null, function(err, hash) {
-      if(err) {
+    bcrypt.hashAsync(password, null, null)
+    .then(function(hash) {
+      this.set('password', hash);
+    }.bind(this))
+    .catch(function(err) {
+      console.log('ERROR HASHING PASWWORD!!!!!!!!!!!!!', err);
+    });
+  },
+
+  isValidPassword: function(password) {
+    bcrypt.compare(password, user.get('password'), function(err, result) {
+      if(result) {
+        req.session.regenerate(function() {
+          req.session.user = username; 
+          res.redirect('/');
+        });
       } else {
-        this.set('password', hash);
+        console.log('Wrong password!');
+        res.redirect('/login');
       }
-    }.bind(this));
+    });
   }
+
 });
 
 module.exports = User;

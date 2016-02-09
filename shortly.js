@@ -11,6 +11,8 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
 
 var app = express();
 
@@ -22,6 +24,25 @@ app.use(partials());
 app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(passport.initialize());
+// app.use(passport.session());
+// app.use(new LocalStrategy(
+//   function(username, password, done) {
+//     Users.query({where: {username: username}})
+//     .fetchOne()
+//     .then(function(user)
+//     { 
+//       if(err) {
+//         return done(err);
+//       } else if (!user) {
+//         return done(null, false, {message:'Incorrect User Name'});   
+//       } else if(!user.validPassword(password)) {
+//         return done(null, false, {message:'Incorrect Password'});
+//       } else {
+//         return done(null, user);
+//       }
+//     });
+//   }));
 app.use(session({secret: 'secrets secrets are no fun'}));
 app.use(express.static(__dirname + '/public'));
 
