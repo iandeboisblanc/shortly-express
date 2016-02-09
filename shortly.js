@@ -95,17 +95,28 @@ app.get('/login', function(req, res) {
 });
 
 app.post('/login', function(req, res) {
-  //
   var username = req.body.username;
   var password =req.body.password;
-
-  req.session.regenerate(function() {
-    req.session.user = username; 
-    res.redirect('/');
+  console.log('Logging in with', username);
+  new User({username:username}).fetch()
+  .then(function(user) {
+    if(user) {
+      console.log('fetching', user);
+      req.session.regenerate(function() {
+        req.session.user = username; 
+        res.redirect('/');
+      });
+    } else {
+      console.log('No user account!');
+      res.redirect('/login');
+    }    
+  })
+  .catch(function(err) {
+    if(err) {
+      throw err;
+    }
   });
-
   //user.getUserInfo(username, function (err, userInfo) {});
-
 });
 
 app.get('/signup', function(req, res) {
