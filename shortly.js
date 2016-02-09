@@ -24,37 +24,82 @@ app.use(partials());
 app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(passport.initialize());
-// app.use(passport.session());
-// app.use(new LocalStrategy(
-//   function(username, password, done) {
-//     Users.query({where: {username: username}})
-//     .fetchOne()
-//     .then(function(user)
-//     { 
-//       if(err) {
-//         return done(err);
-//       } else if (!user) {
-//         return done(null, false, {message:'Incorrect User Name'});   
-//       } else if(!user.validPassword(password)) {
-//         return done(null, false, {message:'Incorrect Password'});
-//       } else {
-//         return done(null, user);
-//       }
-//     });
-//   }));
 app.use(session({secret: 'secrets secrets are no fun'}));
 app.use(express.static(__dirname + '/public'));
 
 
+
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(function(username, password, done) {
+  Users.query({where: {username: username}})
+  .fetchOne()
+  .then(function(user) { 
+    return user.isValidPassword(password)
+            .then(function(result) {
+              return done(null,user);
+            })
+            .catch(function(err) {
+              return done(null, false, {message:"invalid password"});
+            });
+  })
+  .catch(function(err) {
+    return done(err);
+  });
+
+
+
+      // if (!user) {
+      //   return done(null, false, {message:'Incorrect User Name'});   
+      // } else if(user.isValidPassword(password)) {
+      //   console.log('returnval:', user.isValidPassword(password));
+      //   return done(null, user);
+      // } else {
+      //   console.log("Invalid Password");
+      //   return done(null, false, {message:'Incorrect Password'});        
+      // }
+    // })
+    // .catch(function(err) {
+    //   console.log("Error: " + error);
+    // });
+})
+);
+
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+  Users.query({where: {id: id}})
+  .fetchOne()
+  .then(function(user) {
+    done(null, user);
+  })
+  .catch(function(err) {
+    done(err, null);
+  });
+});
+
+
+
+
 var restrict = function(req, res, next) {
-  if (req.session.user) {
+  if(req.user) {
     next();
   } else {
-    req.session.error = 'Access Denied';
     res.redirect('/login');
   }
 };
+
+
+// var restrict = function(req, res, next) {
+//   if (req.session.user) {
+//     next();
+//   } else {
+//     req.session.error = 'Access Denied';
+//     res.redirect('/login');
+//   }
+// };
 
 
 app.get('/', restrict, 
@@ -116,25 +161,28 @@ app.get('/login', function(req, res) {
   res.render('login');
 });
 
-app.post('/login', function(req, res) {
-  var username = req.body.username;
-  var password =req.body.password;
+app.post('/login', passport.authenticate('local', {successRedirect: '/',
+                                          failureRedirect: '/login'}) );
+
+// app.post('/login', function(req, res) {
+//   var username = req.body.username;
+//   var password =req.body.password;
   
-  Users.query({where: {username: username}})
-  .fetchOne()
-  .then( function(user) {
-    return user.isValidPassword(password);
-  })
-  .then( function(result) {
-    req.session.regenerate(function() {
-      req.session.user = username; 
-      res.redirect('/');
-    });
-  }).catch( function(error) {
-    console.log('Invalid Credentials: ' + error);
-    res.redirect('/login');
-  });
-});
+//   Users.query({where: {username: username}})
+//   .fetchOne()
+//   .then( function(user) {
+//     return user.isValidPassword(password);
+//   })
+//   .then( function(result) {
+//     req.session.regenerate(function() {
+//       req.session.user = username; 
+//       res.redirect('/');
+//     });
+//   }).catch( function(error) {
+//     console.log('Invalid Credentials: ' + error);
+//     res.redirect('/login');
+//   });
+// });
 
 app.get('/signup', function(req, res) {
   res.render('signup');
