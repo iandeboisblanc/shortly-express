@@ -5,8 +5,6 @@ var bodyParser = require('body-parser');
 var session = require('express-session');
 var bcrypt = require('bcrypt-nodejs');
 
-
-
 var db = require('./app/config');
 var Users = require('./app/collections/users');
 var User = require('./app/models/user');
@@ -101,14 +99,41 @@ app.post('/login', function(req, res) {
   var username = req.body.username;
   var password =req.body.password;
   console.log('Logging in with', username);
+
+  // new User({username: username, password: password})
+  //   .fetch()
+  //   .then(function(user) {
+  //     if(user) {
+  //       console.log("Found user " + user.attributes);
+
+  //       req.session.regenerate(function() {
+  //           req.session.user = username; 
+  //           res.redirect('/');
+  //         });
+  //     }
+  //     else {
+  //       console.log('Invalid credentials');
+  //       res.redirect('/login');
+  //     }
+  //   });
+
+
+
   Users.query({where: {username: username}})
   .fetchOne()
   .then(function(user) {
     if(user) {
       console.log('fetching', user);
-      req.session.regenerate(function() {
-        req.session.user = username; 
-        res.redirect('/');
+      bcrypt.compare(password, user.get('password'), function(err, result) {
+        if(result) {
+          req.session.regenerate(function() {
+            req.session.user = username; 
+            res.redirect('/');
+          });
+        } else {
+          console.log('Wrong password!');
+          res.redirect('/login');
+        }
       });
     } else {
       console.log('No user account!');
@@ -121,7 +146,6 @@ app.post('/login', function(req, res) {
       throw err;
     }
   });
-  //user.getUserInfo(username, function (err, userInfo) {});
 });
 
 app.get('/signup', function(req, res) {
@@ -131,18 +155,14 @@ app.get('/signup', function(req, res) {
 app.post('/signup', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
-  //hashing!
-  bcrypt.hash(password, null, null, function(err, hash) {
-    console.log(err,hash);
-    new User({username:username, password:hash})
-      .save()
-      .then(function() {
-        req.session.regenerate(function() {
-          req.session.user = username; 
-          res.redirect('/');
-        });
+  new User({username:username, password:password})
+    .save()
+    .then(function() {
+      req.session.regenerate(function() {
+        req.session.user = username; 
+        res.redirect('/');
       });
-  });
+    });
 });
 
 /************************************************************/
