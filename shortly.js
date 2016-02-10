@@ -35,21 +35,14 @@ passport.use('provider', new OAuth2Strategy({
   clientID: '1a23ca155ecda249c0e9',
   tokenURL: 'https://github.com/login/oauth/access_token',
   clientSecret: 'bbcfffc10c3a2172ef9524205c3b6bab0a0b675a',
-  callbackURL: 'http://localhost:4568/auth/provider/callback'
+  callbackURL: 'http://localhost:4568/auth/provider/callback',
 }, function(token, tokenSecret, profile, done) {
-  Users.query({where: {username: profile.displayName}})
-  .fetchOne()
-  .then(function(user) {
-    if(user) {
+  console.log('args',arguments);
+  new User({username:'GitHubUser', password:'dontmatta23423q4123r1  23r23r2'})
+    .save()
+    .then(function(user) {
       done(null, user);
-    } else if(!user) {
-      new User({username:profile.displayName, password:'dontmatta'})
-      .save()
-      .then(function(user) {
-        done(null, user);
-      });    
-    }
-  });
+    });   
 }));
 
 passport.use(new LocalStrategy(function(username, password, done) {
