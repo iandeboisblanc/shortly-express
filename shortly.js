@@ -14,8 +14,34 @@ var Click = require('./app/models/click');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var OAuth2Strategy = require('passport-oauth').OAuth2Strategy;
+var http = require("http");
+var https = require("https");
 
 var app = express();
+
+var getGitHub = function(token, callback) {
+  var options = { 
+    host: 'https://api.github.com',
+    path: 'user?access_token=' + token,
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'Shortly',
+    }
+  };
+  https.request(options, function(res) {
+    var body = '';
+    res.on('data', function(data) {
+      body += data;
+    });
+    res.on('end', function() {
+      console.log('Response:', body);
+      callback(null, body);
+    });
+  }).on('error', function(err) {
+    console.log('Error: ', err);
+  });
+};
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -37,7 +63,11 @@ passport.use('provider', new OAuth2Strategy({
   clientSecret: 'bbcfffc10c3a2172ef9524205c3b6bab0a0b675a',
   callbackURL: 'http://localhost:4568/auth/provider/callback',
 }, function(token, tokenSecret, profile, done) {
-  console.log('args',arguments);
+  console.log(arguments);
+  console.log("about to request github");
+  getGitHub(token, function(err,data) {
+    console.log("\n\n Returned from server ", err,data);
+  });
   new User({username:'GitHubUser', password:'dontmatta23423q4123r1  23r23r2'})
     .save()
     .then(function(user) {
