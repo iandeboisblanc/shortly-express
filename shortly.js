@@ -13,9 +13,9 @@ var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
+var OAuth2Strategy = require('passport-oauth').OAuth2Strategy;
 
 var app = express();
-
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -27,10 +27,31 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({secret: 'secrets secrets are no fun'}));
 app.use(express.static(__dirname + '/public'));
 
-
-
 app.use(passport.initialize());
 app.use(passport.session());
+
+passport.use('provider', new OAuth2Strategy({
+  authorizationURL: 'https://github.com/login/oauth/authorize',
+  clientID: '1a23ca155ecda249c0e9',
+  tokenURL: 'https://github.com/login/oauth/access_token',
+  clientSecret: 'bbcfffc10c3a2172ef9524205c3b6bab0a0b675a',
+  callbackURL: 'http://localhost:4568/auth/provider/callback'
+}, function(token, tokenSecret, profile, done) {
+  Users.query({where: {username: profile.displayName}})
+  .fetchOne()
+  .then(function(user) {
+    if(user) {
+      done(null, user);
+    } else if(!user) {
+      new User({username:profile.displayName, password:'dontmatta'})
+      .save()
+      .then(function(user) {
+        done(null, user);
+      });    
+    }
+  });
+}));
+
 passport.use(new LocalStrategy(function(username, password, done) {
   Users.query({where: {username: username}})
   .fetchOne()
@@ -91,8 +112,6 @@ function(req, res) {
   });
 });
 
-
-
 app.post('/links', 
 function(req, res) {
   var uri = req.body.url;
@@ -128,6 +147,11 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
+app.get('/auth/provider', passport.authenticate('provider'));
+
+app.get('/auth/provider/callback', 
+  passport.authenticate('provider', {successRedirect: '/',
+                                    failureRedirect:'/login'}));
 
 app.get('/login', function(req, res) {
   res.render('login');
@@ -135,7 +159,6 @@ app.get('/login', function(req, res) {
 
 app.post('/login', passport.authenticate('local', {successRedirect: '/',
                                           failureRedirect: '/login'}) );
-
 
 app.get('/signup', function(req, res) {
   res.render('signup');
@@ -160,7 +183,6 @@ function(req, res) {
   req.logout();
   res.redirect('/login');
 });
-
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
